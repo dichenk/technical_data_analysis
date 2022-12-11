@@ -159,7 +159,7 @@ def slice(qbject, column, value):
 
 def get_by_date(date = None, name = None, filename = None):
     global df, start_time, time_flag
-    df = pd.read_csv('all_stocks_5yr.csv') ## reading csv
+    df = pd.read_csv('technical_data_analysis_using_algorithms/all_stocks_5yr.csv') ## reading csv
     time_flag = True ## just a flag
     start_time = start_time_2 = time.time() ## program started
 
@@ -188,7 +188,7 @@ def get_by_date(date = None, name = None, filename = None):
     
     start_time = time.time() ## засекаем время
     dj = poetry_get__banch(df, val_d, val_n) 
-    dj.to_csv(filename)
+    dj.to_csv('technical_data_analysis_using_algorithms/' + filename)
     print(f'время выполнения программы - {(time.time() - start_time_2) / 60} минут')
 
 
@@ -222,5 +222,3 @@ def get_info(qbject, name, value):
         if a[0] == a[1]: df_1 = df_1.iloc[a[0]] ## slice по диапазону i:1+1 почему-то возвращает пустой датафрейм
         else: df_1 = df_1.iloc[a[0]:a[1]]
         return df_1
-
-get_by_date()

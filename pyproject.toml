@@ -14,3 +14,6 @@ pandas = "^1.5.2"
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
+
+[tool.poetry.scripts]
+get-banch = 'technical_data_analysis_using_algorithms.functions:get_by_date'
