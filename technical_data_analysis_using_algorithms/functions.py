@@ -2,9 +2,11 @@ import csv
 import pandas as pd
 import time
 import math
+import json
+import feather
 
 time_flag = df = None
-'''
+
 ## декоратор для функций, который считает количество вызовов функции (для соответствующего имени файла)
 def decor_count(func):
     def wrapper(*args, **kwargs):
@@ -16,7 +18,7 @@ def decor_count(func):
 ## функция кэширования запроса
 def cash_function(cashed_arguements, amount_of_calling):
     try:
-        with open('cash.json', 'r') as my_favourite_json:
+        with open('technical_data_analysis_using_algorithms/cash.json', 'r') as my_favourite_json:
             data = json.load(my_favourite_json)
     except:
         data = {}
@@ -30,52 +32,60 @@ def cash_function(cashed_arguements, amount_of_calling):
             json.dump(data, my_favourite_json)
         return 0
 
-## Функция выполнения сортировки и фильтра
-def select_sorted_backdoor(sort_columns, limit, order):
-    dv = vaex.from_csv(file_path, convert = True)
-    dv = dv[dv.Name == order]
-    dv = dv.sort(sort_columns, ascending = False)
-    dv  = dv[0:limit]
-    return dv
-
 @decor_count
-def select_sorted(sort_columns_f = sort_columns , limit_f = limit, group_by_name_f = group_by_name, order_f = order):
-    a = ['select_sorted_backdoor', sort_columns_f, str(limit_f), str(group_by_name_f), order_f]
-    a = ','.join(a)
-    cash_fu = cash_function(a, select_sorted.counter)
-    if cash_fu == 0:
-        ## Вызов функции впервые. Вызываем, обрабатываем, кэшируем результат
-        b = select_sorted_backdoor(sort_columns_f, limit_f, order_f)
-        b.export_hdf5(str(select_sorted.counter) + '.hdf5')
-        b.export_csv(filename + str(select_sorted.counter) + filename_type)
+def get_sorted():
+    sort_dict = {'1': 'open', '2': 'close', '3': 'high', '4': 'low', '5': 'volume'}
+    sort_columns = order = limit = filename = None
+    while 1:
+        print('Сортировать по цене\nоткрытия (1)\nзакрытия (2)\nмаксимум [3]\nминимум (4)\nобъем (5)')
+        sort_columns = input()
+        try:
+            sort_columns = sort_dict[sort_columns]
+            break
+        except: pass
+        if sort_columns == '':
+            sort_columns = 'high'
+            break
+    while 1:
+        order = input('Порядок по убыванию [1] / возрастанию (2): ')
+        if order == '2':
+            order = 'asc'
+            break
+        elif order == '1' or order == '':
+            order = 'desc'
+            break       
+    while 1:
+        limit = input('Ограничение выборки [10]: ')
+        try:
+            limit = int(limit)
+            if limit >= 1: break
+        except: 
+            if limit == "":
+                limit = 10
+                break
+            continue
+    while 1:
+        filename = input('Название файла для сохранения результата [dump.csv]: ')
+        if len(filename) >= 5 and filename[-5:-1] != '.csv': break
+        elif filename == "":
+            filename = 'dump.csv'
+    some_cash =','.join(['get_sorted', sort_columns, str(order), str(limit)])
+    some_cash = cash_function(some_cash, get_sorted.counter)
+    if some_cash == 0:
+        get_sorted_table = select_sorted(sort_columns, order, limit)
+        bet_sorted_table.to_feather('/technical_data_analysis_using_algorithms/get_sorted' + str(get_sorted.counter))
     else:
-        ## Функцию не вызываем, достаем инфу из кэша
-        b = vaex.open(str(cash_fu) + '.hdf5')
-        b.export_csv(filename + str(select_sorted.counter) + filename_type)
+        get_sorted_table = pd.read_feather('technical_data_analysis_using_algorithms/get_sorted' + str(some_cash))
+    get_sorted_table.to_csv('technical_data_analysis_using_algorithms/' + filename)
+    
+def select_sorted(sort_columns, order, limit):
+    global df, start_time, time_flag
+    df = pd.read_csv('technical_data_analysis_using_algorithms/all_stocks_5yr.csv') ## reading csv
+    time_flag = True ## just a flag
+    start_time = start_time_2 = time.time() ## program started
+    dj = quick_sort(df, val_d)
+    return dj
 
-
-def get_by_date(date = date_sec, name=name_sec):
-    ## одна из функций домашней работы
-    dv = vaex.from_csv(file_path, convert=True)
-    dvv = dv[dv.Name == name]
-    dvv = dvv[dv.date == date]
-    dvv.export_csv(filename + filename_type)
-
-## Функция к домашке по 25 дню
-def get_by_date2(date = date_sec, name = name_sec):
-
-    a = []
-    with open('all_stocks_5yr.csv', "r") as file:
-        reader = csv.reader(file)
-        print(reader)
-        for i in reader:
-            if i[0] == date and i[6] == name
-                a.append(i)
-
-    with open(filename2, 'w') as file:
-        writer = csv.writer(file)
-        writer.writerows(a)
-'''
 ## to show that I can rwite down an algo
 def quick_sort(qbject, column):
     ## делим будем делить таблицу на три части
@@ -103,8 +113,8 @@ def quick_sort(qbject, column):
     except:
         pd_1 = pd.concat([pd_1, pd_3])
     return pd_1
+## сортировка wредствами Pandas
 
-## сортировка вредствами Pandas
 def cheet_sort(qbject, column):
     qbject = qbject.sort_values(by = column)
     return qbject
@@ -149,7 +159,6 @@ def slice(qbject, column, value):
     while qbject.iloc[i][column] == value: 
         i -= 1
         if -1 == i: break
-
     ## идем вниз по таблице
     while qbject.iloc[j][column] == value:
         j += 1
