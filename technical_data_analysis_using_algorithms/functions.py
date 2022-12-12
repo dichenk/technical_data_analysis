@@ -3,7 +3,6 @@ import pandas as pd
 import time
 import math
 import json
-import feather
 
 time_flag = df = None
 
@@ -28,7 +27,7 @@ def cash_function(cashed_arguements, amount_of_calling):
     except: 
         ## записываем запрос в кэш запросов
         data[cashed_arguements] = amount_of_calling
-        with open('cash.json', 'w') as my_favourite_json:
+        with open('technical_data_analysis_using_algorithms/cash.json', 'w') as my_favourite_json:
             json.dump(data, my_favourite_json)
         return 0
 
@@ -73,9 +72,13 @@ def get_sorted():
     some_cash = cash_function(some_cash, get_sorted.counter)
     if some_cash == 0:
         get_sorted_table = select_sorted(sort_columns, order, limit)
-        bet_sorted_table.to_feather('/technical_data_analysis_using_algorithms/get_sorted' + str(get_sorted.counter))
+        print('go to cash')
+        time.sleep(2)
+        get_sorted_table.to_pickle('technical_data_analysis_using_algorithms/get_sorted' + str(get_sorted.counter) + '.pkl')
     else:
-        get_sorted_table = pd.read_feather('technical_data_analysis_using_algorithms/get_sorted' + str(some_cash))
+        print('take from cask')
+        time.sleep(2)
+        get_sorted_table = pd.read_pickle('technical_data_analysis_using_algorithms/get_sorted' + str(some_cash) + '.pkl')
     get_sorted_table.to_csv('technical_data_analysis_using_algorithms/' + filename)
     
 def select_sorted(sort_columns, order, limit):
@@ -83,7 +86,7 @@ def select_sorted(sort_columns, order, limit):
     df = pd.read_csv('technical_data_analysis_using_algorithms/all_stocks_5yr.csv') ## reading csv
     time_flag = True ## just a flag
     start_time = start_time_2 = time.time() ## program started
-    dj = quick_sort(df, val_d)
+    dj = quick_sort(df, sort_columns)
     return dj
 
 ## to show that I can rwite down an algo
