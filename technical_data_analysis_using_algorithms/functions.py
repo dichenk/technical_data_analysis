@@ -6,7 +6,10 @@ import json
 
 time_flag = df = None
 
-## декоратор для функций, который считает количество вызовов функции (для соответствующего имени файла)
+''' 
+декоратор
+считает количество вызовов 
+'''
 def decor_count(func):
     def wrapper(*args, **kwargs):
         wrapper.counter += 1
@@ -14,7 +17,7 @@ def decor_count(func):
     wrapper.counter = 0
     return wrapper
 
-## функция кэширования запроса
+''' кэширование запроса'''
 def cash_function(cashed_arguements, amount_of_calling):
     try:
         with open('technical_data_analysis_using_algorithms/cash.json', 'r') as my_favourite_json:
@@ -22,10 +25,16 @@ def cash_function(cashed_arguements, amount_of_calling):
     except:
         data = {}
     try: 
-        ## ищем запрос в кэшэ запросов
+        ''' 
+        ищем запрос в кэшэ запросов
+        нашли? вернем номер кэша
+        '''
         return data[cashed_arguements]
     except: 
-        ## записываем запрос в кэш запросов
+        '''
+        не нашли? 
+        запишем запрос в кэш запросов
+        '''
         data[cashed_arguements] = amount_of_calling
         with open('technical_data_analysis_using_algorithms/cash.json', 'w') as my_favourite_json:
             json.dump(data, my_favourite_json)
@@ -35,6 +44,7 @@ def cash_function(cashed_arguements, amount_of_calling):
 def get_sorted():
     sort_dict = {'1': 'open', '2': 'close', '3': 'high', '4': 'low', '5': 'volume'}
     sort_columns = order = limit = filename = None
+    '''взаимодействие с пользователем при запуске скрипта'''
     while 1:
         print('Сортировать по цене\nоткрытия (1)\nзакрытия (2)\nмаксимум [3]\nминимум (4)\nобъем (5)')
         sort_columns = input()
@@ -65,20 +75,41 @@ def get_sorted():
             continue
     while 1:
         filename = input('Название файла для сохранения результата [dump.csv]: ')
-        if len(filename) >= 5 and filename[-5:-1] != '.csv': break
-        elif filename == "":
+        if filename == "":
             filename = 'dump.csv'
+        if len(filename) >= 5 and filename[-5:-1] != '.csv': break
+
+    '''
+    кладем в переменную инфу для кэша
+     - номер функции, передаваемые параметры
+    '''
     some_cash =','.join(['get_sorted', sort_columns, str(order), str(limit)])
+    '''
+    запрос в кэш запросов
+    данная функция с данными аргументами уже вызывалась?
+    '''
     some_cash = cash_function(some_cash, get_sorted.counter)
     if some_cash == 0:
+        '''
+        функция не вызывалась
+        работаем
+        '''
         get_sorted_table = select_sorted(sort_columns, order, limit)
         print('go to cash')
+        print('cash = ', some_cash)
         time.sleep(2)
+        '''записываем информацию в кэш'''
         get_sorted_table.to_pickle('technical_data_analysis_using_algorithms/get_sorted' + str(get_sorted.counter) + '.pkl')
     else:
-        print('take from cask')
+        print('take from cash = ', some_cash)
+        
+        '''
+        функция вызывалась
+        достаем информацию из кэша
+        '''
         time.sleep(2)
         get_sorted_table = pd.read_pickle('technical_data_analysis_using_algorithms/get_sorted' + str(some_cash) + '.pkl')
+    '''отправляем результат в csv файл'''
     get_sorted_table.to_csv('technical_data_analysis_using_algorithms/' + filename)
     
 def select_sorted(sort_columns, order, limit):
@@ -87,17 +118,26 @@ def select_sorted(sort_columns, order, limit):
     time_flag = True ## just a flag
     start_time = start_time_2 = time.time() ## program started
     dj = quick_sort(df, sort_columns)
-    return dj
+    '''
+    если нужна отсортированная таблица по убыванию
+    воспользуемся встроенным инструментом Padnas'''
+    if order == 'desc':
+        print('desk')
+        dj = cheet_sort(df, sort_columns, False)
+    return dj.iloc[0:limit]
 
-## to show that I can rwite down an algo
+''' 
+алгоритм быстрой сортировки
+сортируем объект Pandas DataFrame
+'''
 def quick_sort(qbject, column):
-    ## делим будем делить таблицу на три части
+    '''делим таблицу на три части'''
     pd_1 = pd.DataFrame(columns = list(qbject.columns)) ## больше искомого элемента
     pd_2 = qbject.iloc[[0]] ## равно
     pd_3 = pd.DataFrame(columns = list(qbject.columns)) ## меньше
 
     if len(qbject) == 1: return qbject ## выход из рекурсии
-
+    '''сама сортировка'''
     for i in range(len(qbject)):
         if qbject.iloc[i][column] < qbject.iloc[0][column]:
             pd_1 = pd.concat([pd_1, qbject.iloc[[i]]])
@@ -116,13 +156,13 @@ def quick_sort(qbject, column):
     except:
         pd_1 = pd.concat([pd_1, pd_3])
     return pd_1
-## сортировка wредствами Pandas
 
-def cheet_sort(qbject, column):
-    qbject = qbject.sort_values(by = column)
+'''сортировка wредствами Pandas'''
+def cheet_sort(qbject, column, asc = True):
+    qbject = qbject.sort_values(by = column, ascending = asc)
     return qbject
 
-## check how long out algo is going to work
+'''проверка времени выполнения алгоритма'''
 def check(i, qbject):
     global time_flag, start_time
     if time_flag and i > 400:
@@ -137,7 +177,7 @@ def check(i, qbject):
         if a == "1": return True
         time_flag = False
 
-## binary searsh
+'''бинарный поиск'''
 def search(qbject, column, value):
     print('searching')
     i = 0
@@ -153,7 +193,10 @@ def search(qbject, column, value):
             j = k
     return k
 
-## достает срез таблицы по искомому элементы (все строки)
+'''
+формируем срез таблицы по искомому элементу (все строки)
+возвращаем номера строк
+'''
 def slice(qbject, column, value):
     k = search(qbject, column, value) ## ищет строку с исходным элементом
     i = k
@@ -204,7 +247,7 @@ def get_by_date(date = None, name = None, filename = None):
     print(f'время выполнения программы - {(time.time() - start_time_2) / 60} минут')
 
 
-## сортировки, выборки, условия (все, что под капотом у скрипта)
+'''сортировки, выборки, условия (все, что под капотом у скрипта)'''
 def poetry_get__banch(qbject, val_d, val_n):
     date = 'date'
     name = 'Name'
